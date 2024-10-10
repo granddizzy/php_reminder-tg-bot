@@ -1,0 +1,12 @@
+[Unit]
+Description=Worker Service
+After=network.target
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/bin/php /code/runner -c handle_events_daemon
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

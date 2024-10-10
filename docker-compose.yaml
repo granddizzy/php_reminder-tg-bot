@@ -6,6 +6,7 @@ services:
     container_name: reminder-tg-bot_php-cli
     volumes:
       - ./code:/code/
+
     tty: true
     ports:
       - "9003:9003"  # Проброс порта для Xdebug
