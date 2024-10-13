@@ -12,64 +12,56 @@ use App\Models\Event;
 
 //use App\Models\EventDto;
 
-class HandleEventsCommand extends Command
+class HandleEventsCommand extends Command {
 
-{
+  protected Application $app;
 
-    protected Application $app;
+  public function __construct(Application $app) {
 
-    public function __construct(Application $app)
+    $this->app = $app;
 
-    {
+  }
 
-        $this->app = $app;
+  public function run(array $options = []): void {
 
-    }
+    $event = new Event(new SQLite($this->app));
 
-    public function run(array $options = []): void
+    $events = $event->select();
 
-    {
+    $eventSender = new EventSender();
 
-        $event = new Event(new SQLite($this->app));
+    foreach ($events as $event) {
 
-        $events = $event->select();
+      if ($this->shouldEventBeRan($event)) {
 
-        $eventSender = new EventSender();
+        $eventSender->sendMessage($this->app->env('TELEGRAM_TOKEN'), $event->receiverId, $event->text);
 
-        foreach ($events as $event) {
-
-            if ($this->shouldEventBeRan($event)) {
-
-                $eventSender->sendMessage($event->receiverId, $event->text);
-
-            }
-
-        }
+      }
 
     }
 
-    private function shouldEventBeRan($event): bool
+  }
 
-    {
-        $currentMinute = date("i");
+  private function shouldEventBeRan($event): bool {
+    $currentMinute = date("i");
 
-        $currentHour = date("H");
+    $currentHour = date("H");
 
-        $currentDay = date("d");
+    $currentDay = date("d");
 
-        $currentMonth = date("m");
+    $currentMonth = date("m");
 
-        $currentWeekday = date("w");
+    $currentWeekday = date("w");
 
-        return ($event['minute'] === $currentMinute &&
+    return ($event['minute'] === $currentMinute &&
 
-            $event['hour'] === $currentHour &&
+      $event['hour'] === $currentHour &&
 
-            $event['day'] === $currentDay &&
+      $event['day'] === $currentDay &&
 
-            $event['month'] === $currentMonth &&
+      $event['month'] === $currentMonth &&
 
-            $event['weekDay'] === $currentWeekday);
-    }
+      $event['weekDay'] === $currentWeekday);
+  }
 
 }

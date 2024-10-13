@@ -1,10 +1,12 @@
 <?php
+
 namespace App\EventSender;
 
-class EventSender
-{
-    public function sendMessage(string $receiver, string $message)
-    {
-        echo date('d.m.y H:i') . " Я отправил сообщение $message получателю с id $receiver\n";
-    }
+use App\TelegramApi\TelegramApi;
+
+class EventSender {
+  public function sendMessage(string $token, string $receiver, string $message) {
+    $tg = new TelegramApi($token);
+    $tg->sendMessage($receiver, date('d.m.y H:i') . " " . $message);
+  }
 }
