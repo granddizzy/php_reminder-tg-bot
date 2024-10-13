@@ -20,7 +20,7 @@ class TelegramApi {
     $response = curl_exec($ch);
     curl_close($ch);
 
-    return json_decode($response, true);
+    return json_decode($response, true)['result'];
   }
 
   public function sendMessage($chatId, $message) {

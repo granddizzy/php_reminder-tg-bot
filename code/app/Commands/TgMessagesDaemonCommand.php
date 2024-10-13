@@ -6,10 +6,10 @@ namespace App\Commands;
 
 use App\Application;
 
-class HandleEventsDaemonCommand extends Command {
+class TgMessagesDaemonCommand extends Command {
   protected Application $app;
 
-  const CACHE_PATH = __DIR__ . '/../../cache.txt';
+  const CACHE_PATH = __DIR__ . '/../../cache1.txt';
 
   public function __construct(Application $app) {
     $this->app = $app;
@@ -42,7 +42,7 @@ class HandleEventsDaemonCommand extends Command {
 
   private function daemonRun(array $options) {
     $lastData = $this->getLastData();
-    $handleEventsCommand = new HandleEventsCommand($this->app);
+    $tgMessagesCommand = new TgMessagesCommand($this->app);
 
     while (true) {
       if ($lastData === $this->getCurrentTime()) {
@@ -50,7 +50,7 @@ class HandleEventsDaemonCommand extends Command {
         continue;
       }
 
-      $handleEventsCommand->run($options);
+      $tgMessagesCommand->run($options);
       $lastData = $this->getCurrentTime();
       sleep(10);
     }

@@ -27,16 +27,44 @@ class HandleEventsCommand extends Command {
   }
 
   private function shouldEventBeRan($event): bool {
-    $currentMinute = date("i");
-    $currentHour = date("H");
-    $currentDay = date("d");
-    $currentMonth = date("m");
-    $currentWeekday = date("w");
+    $currentMinute = (int)date("i");
+    $currentHour = (int)date("H");
+    $currentDay = (int)date("d");
+    $currentMonth = (int)date("m");
+    $currentWeekday = (int)date("w");
 
-    return ($event['minute'] === $currentMinute &&
-      $event['hour'] === $currentHour &&
-      $event['day'] === $currentDay &&
-      $event['month'] === $currentMonth &&
-      $event['weekDay'] === $currentWeekday);
+    return $this->matchesCronPart($event['minute'], $currentMinute) &&
+      $this->matchesCronPart($event['hour'], $currentHour) &&
+      $this->matchesCronPart($event['day'], $currentDay) &&
+      $this->matchesCronPart($event['month'], $currentMonth) &&
+      $this->matchesCronPart($event['day_of_week'], $currentWeekday);
+  }
+
+  private function matchesCronPart($cronPart, $currentValue): bool {
+    // Если это звездочка, то любое значение подходит
+    if ($cronPart === '*') {
+      return true;
+    }
+
+    // Если это диапазон (например, 1-5)
+    if (strpos($cronPart, '-') !== false) {
+      [$start, $end] = explode('-', $cronPart);
+      return $currentValue >= (int)$start && $currentValue <= (int)$end;
+    }
+
+    // Если это шаг (например, */5)
+    if (strpos($cronPart, '*/') !== false) {
+      $step = (int)substr($cronPart, 2);
+      return $currentValue % $step === 0;
+    }
+
+    // Если это список значений через запятую (например, 1,2,3)
+    if (strpos($cronPart, ',') !== false) {
+      $values = explode(',', $cronPart);
+      return in_array((string)$currentValue, $values, true);
+    }
+
+    // Если это конкретное значение
+    return (int)$cronPart === $currentValue;
   }
 }
