@@ -47,20 +47,16 @@ class HandleEventsDaemonCommand extends Command
     private function daemonRun(array $options)
     {
         $lastData = $this->getLastData();
-
         $handleEventsCommand = new HandleEventsCommand($this->app);
 
         while (true) {
             if ($lastData === $this->getCurrentTime()) {
                 sleep(10);
-
                 continue;
             }
 
             $handleEventsCommand->run($options);
-
             $lastData = $this->getCurrentTime();
-
             sleep(10);
         }
     }
