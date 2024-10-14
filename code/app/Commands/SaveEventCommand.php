@@ -63,7 +63,7 @@ class SaveEventCommand extends Command {
     return getopt($shortopts, $longopts);
   }
 
-  private function isNeedHelp(array $options): bool {
+  public function isNeedHelp(array $options): bool {
     return !isset($options['name']) ||
       !isset($options['text']) ||
       !isset($options['receiver']) ||

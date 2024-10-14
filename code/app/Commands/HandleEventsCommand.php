@@ -26,7 +26,7 @@ class HandleEventsCommand extends Command {
     }
   }
 
-  private function shouldEventBeRan($event): bool {
+  public function shouldEventBeRan($event): bool {
     $currentMinute = (int)date("i");
     $currentHour = (int)date("H");
     $currentDay = (int)date("d");

@@ -56,7 +56,7 @@ class HandleEventsDaemonCommand extends Command {
     }
   }
 
-  private function getCurrentTime(): array {
+  public function getCurrentTime(): array {
     return [
       date("i"),
       date("H"),
@@ -66,7 +66,7 @@ class HandleEventsDaemonCommand extends Command {
     ];
   }
 
-  private function getLastData(): array {
+  public function getLastData(): array {
     if (!file_exists(self::CACHE_PATH)) {
       file_put_contents(self::CACHE_PATH, "");
     }
