@@ -6,6 +6,7 @@ use App\Application;
 use App\Database\SQLite;
 use App\EventSender\EventSender;
 use App\Models\Event;
+use App\TelegramApi\TelegramApi;
 
 class HandleEventsCommand extends Command {
 
@@ -18,10 +19,10 @@ class HandleEventsCommand extends Command {
   public function run(array $options = []): void {
     $event = new Event(new SQLite($this->app));
     $events = $event->select();
-    $eventSender = new EventSender();
+    $eventSender = new EventSender(new TelegramApi($this->app->env('TELEGRAM_TOKEN')));
     foreach ($events as $event) {
       if ($this->shouldEventBeRan($event)) {
-        $eventSender->sendMessage($this->app->env('TELEGRAM_TOKEN'), $event['receiver_id'], $event['text']);
+        $eventSender->sendMessage($event['receiver_id'], $event['text']);
       }
     }
   }

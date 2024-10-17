@@ -2,11 +2,14 @@
 
 namespace App\EventSender;
 
-use App\TelegramApi\TelegramApi;
-
 class EventSender {
-  public function sendMessage(string $token, string $receiver, string $message) {
-    $tg = new TelegramApi($token);
-    $tg->sendMessage($receiver, date('d.m.y H:i') . " " . $message);
+  protected $telegramApi;
+
+  public function sendMessage(string $receiver, string $message) {
+    $this->telegramApi->sendMessage($receiver, date('d.m.y H:i') . " " . $message);
+  }
+
+  public function __construct($telegramApi) {
+    $this->telegramApi = $telegramApi;
   }
 }
