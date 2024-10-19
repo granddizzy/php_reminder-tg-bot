@@ -3,44 +3,54 @@
 namespace App\Commands;
 
 use App\Application;
-use App\Models\Event;
+use App\Cache\Redis;
 use App\TelegramApi\TelegramApi;
+use Predis\Client as PredisClient;
 
 class TgMessagesCommand extends Command {
   private TelegramApi $telegramApi;
   protected Application $app;
   private array $userState = []; // Храним состояние пользователя
-  private array $messageHistory = [];// Храним историю сообщений
-  private const OFFSET_FILE = __DIR__ . '/offset.txt';
+  private Redis $redis;
 
   public function __construct(Application $app) {
     $this->app = $app;
     $this->telegramApi = new TelegramApi($app->env('TELEGRAM_TOKEN'));
+
+    // Инициализация клиента Predis
+    $predisClient = new PredisClient([
+      'host' => $app->env('REDIS_HOST', 'redis'),
+      'port' => $app->env('REDIS_PORT', 6379),
+    ]);
+    $this->redis = new Redis($predisClient);
   }
 
-  function run(array $options = []): void {
-    $offset = $this->loadOffset();
+  public function run(array $options = []): void {
+    $this->receiveNewMessages();
+  }
 
+  private function receiveNewMessages() {
+    $offset = $this->loadOffset();
     $messages = $this->telegramApi->getMessages($offset);
 
     if (!empty($messages)) {
       foreach ($messages as $message) {
-        $this->processMessage($message);
-        $offset = $message['update_id'] + 1;
+        if (!isset($message['message']) || !isset($message['message']['text'])) {
+          continue;
+        }
+
+        $chatId = $message['message']['chat']['id'];
+        // Сохраняем сообщение в Redis
+        $this->cacheMessage($chatId, $message);
+
+        if ($offset > 0) $this->processMessage($chatId, $message);
+        $this->saveOffset($message['update_id'] + 1);
       }
-      $this->saveOffset($offset);
     }
   }
 
-  private function processMessage($message): void {
-    if (!isset($message['message']) || !isset($message['message']['text'])) {
-      return;
-    }
-
-    $chatId = $message['message']['chat']['id'];
+  private function processMessage($chatId, $message): void {
     $text = trim($message['message']['text']);
-
-    $this->saveMessageHistory($chatId, $text);
 
     // Инициализируем состояние пользователя, если оно не существует
     if (!isset($this->userState[$chatId])) {
@@ -67,6 +77,23 @@ class TgMessagesCommand extends Command {
         $this->sendMessage($chatId, "Неизвестная команда.");
         break;
     }
+  }
+
+  private function cacheMessage($chatId, $message): void {
+    // Уникальный ключ для кэширования сообщения
+    $messageId = $message['message']['message_id'];
+    $key = "telegram_message:{$chatId}:{$messageId}";
+
+    // Сохраняем сообщение в Redis с временем жизни (TTL) 1 час
+    $this->redis->set($key, json_encode($message), 3600);
+  }
+
+  private function getCachedMessage($chatId, $messageId) {
+    $key = "telegram_message:{$chatId}:{$messageId}";
+
+    // Получаем сообщение из Redis
+    $cachedMessage = $this->redis->get($key);
+    return $cachedMessage ? json_decode($cachedMessage, true) : null;
   }
 
   private function handleAddEvent($chatId, $text): void {
@@ -118,21 +145,11 @@ class TgMessagesCommand extends Command {
     $event->run($eventData);
   }
 
-  private function saveMessageHistory($chatId, $text): void {
-    if (!isset($this->messageHistory[$chatId])) {
-      $this->messageHistory[$chatId] = [];
-    }
-    $this->messageHistory[$chatId][] = $text;
-  }
-
   private function loadOffset(): int {
-    if (file_exists(self::OFFSET_FILE)) {
-      return (int)file_get_contents(self::OFFSET_FILE);
-    }
-    return 0;
+    return $this->redis->get('tg_messages_offset', 0);
   }
 
   private function saveOffset(int $offset): void {
-    file_put_contents(self::OFFSET_FILE, (string)$offset);
+    $this->redis->set('tg_messages_offset', $offset ?? 0);
   }
 }

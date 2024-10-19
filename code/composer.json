@@ -9,6 +9,8 @@
     "ext-pcntl": "*",
     "ext-pdo": "*",
     "ext-pdo_sqlite": "*",
+    "predis/predis": "^2.2",
+    "psr/simple-cache": "^3.0",
     "telegram-bot/api": "^2.5",
     "vlucas/phpdotenv": "^5.5"
   },

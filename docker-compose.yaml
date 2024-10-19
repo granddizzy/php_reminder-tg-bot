@@ -1,3 +1,5 @@
+version: '3'
+
 services:
   php-cli:
     build:
@@ -6,7 +8,26 @@ services:
     container_name: reminder-tg-bot_php-cli
     volumes:
       - ./code:/code/
-
     tty: true
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      # REDIS_PASSWORD:
+      XDEBUG_MODE: debug
+      XDEBUG_CONFIG:
+        client_host=host.docker.internal
+        start_with_request=yes
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:latest
+    container_name: redis
     ports:
-      - "9003:9003"  # Проброс порта для Xdebug
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+volumes:
+  redis_data:
+    driver: local
