@@ -13,7 +13,10 @@ RUN apt-get update && apt-get install -y \
         htop \
         && docker-php-ext-install zip \
         && docker-php-ext-install pdo pdo_mysql pcntl \
-        && docker-php-ext-install pdo_sqlite
+        && docker-php-ext-install pdo_sqlite \
+        && docker-php-ext-install bcmath
+
+RUN docker-php-ext-install sockets
 
 VOLUME /code
 

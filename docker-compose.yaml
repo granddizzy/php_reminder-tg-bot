@@ -19,6 +19,7 @@ services:
         start_with_request=yes
     depends_on:
       - redis
+      - rabbitmq
 
   redis:
     image: redis:latest
@@ -28,6 +29,20 @@ services:
     volumes:
       - redis_data:/data
 
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"      # Порт для приложений (AMQP)
+      - "15672:15672"    # Порт для веб-интерфейса управления
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+
 volumes:
   redis_data:
+    driver: local
+  rabbitmq_data:
     driver: local

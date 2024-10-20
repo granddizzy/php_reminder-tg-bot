@@ -4,6 +4,7 @@ namespace App\Commands;
 
 use App\Application;
 use App\EventSender\EventSender;
+use App\Queue\RabbitMQ;
 use App\TelegramApi\TelegramApi;
 
 class TgSendMessageCommand extends Command {
@@ -15,8 +16,8 @@ class TgSendMessageCommand extends Command {
 
   function run(array $options = []): void {
     $options = $this->getGetoptOptionValues();
-
-    $eventSender = new EventSender(new TelegramApi($this->app->env('TELEGRAM_TOKEN')));
+    $queue = new RabbitMQ('eventSender');
+    $eventSender = new EventSender(new TelegramApi($this->app->env('TELEGRAM_TOKEN')), $queue);
     $eventSender->sendMessage($options['receiver'], $options['text']);
   }
 

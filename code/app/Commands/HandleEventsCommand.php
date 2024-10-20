@@ -6,6 +6,7 @@ use App\Application;
 use App\Database\SQLite;
 use App\EventSender\EventSender;
 use App\Models\Event;
+use App\Queue\RabbitMQ;
 use App\TelegramApi\TelegramApi;
 
 class HandleEventsCommand extends Command {
@@ -19,7 +20,8 @@ class HandleEventsCommand extends Command {
   public function run(array $options = []): void {
     $event = new Event(new SQLite($this->app));
     $events = $event->select();
-    $eventSender = new EventSender(new TelegramApi($this->app->env('TELEGRAM_TOKEN')));
+    $queue = new RabbitMQ('eventSender');
+    $eventSender = new EventSender(new TelegramApi($this->app->env('TELEGRAM_TOKEN')), $queue);
     foreach ($events as $event) {
       if ($this->shouldEventBeRan($event)) {
         $eventSender->sendMessage($event['receiver_id'], $event['text']);
