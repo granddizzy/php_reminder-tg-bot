@@ -11,12 +11,7 @@ RUN apt-get update && apt-get install -y \
         supervisor \
         cron \
         htop \
-        && docker-php-ext-install zip \
-        && docker-php-ext-install pdo pdo_mysql pcntl \
-        && docker-php-ext-install pdo_sqlite \
-        && docker-php-ext-install bcmath
-
-RUN docker-php-ext-install sockets
+        && docker-php-ext-install zip pdo pdo_mysql pcntl pdo_sqlite bcmath sockets
 
 VOLUME /code
 
